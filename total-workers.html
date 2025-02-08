@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Management</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container max-w-lg bg-white p-6 rounded-lg shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Worker Management</h2>
+        <p class="mb-4">Total Workers: <span id="workerCount" class="font-semibold">0</span></p>
+
+        <div class="space-y-2 mb-4">
+            <input type="text" id="workerName" placeholder="Worker Name" class="w-full p-2 border rounded">
+            <input type="text" id="workerCnic" placeholder="CNIC" class="w-full p-2 border rounded">
+            <input type="text" id="workerContact" placeholder="Contact Number" class="w-full p-2 border rounded">
+        </div>
+
+        <button onclick="addWorker()" class="w-full bg-blue-500 text-white p-2 rounded mb-4">Add Worker</button>
+
+        <input type="file" id="pdfInput" accept="application/pdf" class="mb-4" onchange="extractWorkersFromPDF()">
+
+        <ul id="workerList" class="text-left"></ul>
+
+        <button onclick="goToDashboard()" class="w-full bg-gray-500 text-white p-2 rounded mt-4">Back to Dashboard</button>
+    </div>
+
+    <script>
+        let totalWorkers = parseInt(localStorage.getItem("totalWorkers")) || 0;
+        document.getElementById("workerCount").textContent = totalWorkers;
+
+        function isValidInput(name, cnic, contact) {
+            return name && /^[0-9]{1,15}$/.test(cnic) && /^[0-9]{1,15}$/.test(contact);
+        }
+
+        function createWorkerListItem(name, cnic, contact) {
+            let li = document.createElement("li");
+            li.classList.add("flex", "items-center", "justify-between", "py-2");
+
+            let workerDetails = document.createElement("span");
+            workerDetails.textContent = `${name} - CNIC: ${cnic} - Contact: ${contact}`;
+            li.appendChild(workerDetails);
+
+            let removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.className = "ml-2 text-red-500";
+            removeBtn.onclick = () => removeWorker(li);
+            li.appendChild(removeBtn);
+
+            return li;
+        }
+
+        function updateWorkerCount() {
+            document.getElementById("workerCount").textContent = totalWorkers;
+        }
+
+        function addWorker() {
+            let name = document.getElementById("workerName").value.trim();
+            let cnic = document.getElementById("workerCnic").value.trim();
+            let contact = document.getElementById("workerContact").value.trim();
+
+            if (!isValidInput(name, cnic, contact)) {
+                alert("Please enter valid details (CNIC and Contact must be 1-15 digits)");
+                return;
+            }
+
+            totalWorkers++;
+            localStorage.setItem("totalWorkers", totalWorkers);
+            updateWorkerCount();
+
+            let workerItem = createWorkerListItem(name, cnic, contact);
+            document.getElementById("workerList").appendChild(workerItem);
+
+            resetWorkerForm();
+        }
+
+        function removeWorker(workerItem) {
+            workerItem.remove();
+            totalWorkers--;
+            localStorage.setItem("totalWorkers", totalWorkers);
+            updateWorkerCount();
+        }
+
+        function resetWorkerForm() {
+            document.getElementById("workerName").value = "";
+            document.getElementById("workerCnic").value = "";
+            document.getElementById("workerContact").value = "";
+        }
+
+        function extractWorkersFromPDF() {
+            let file = document.getElementById("pdfInput").files[0];
+            if (file) {
+                let fileReader = new FileReader();
+                fileReader.onload = () => {
+                    let typedarray = new Uint8Array(fileReader.result);
+                    pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                        let textPromises = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            textPromises.push(pdf.getPage(i).then(page => page.getTextContent()));
+                        }
+                        Promise.all(textPromises).then(textContents => {
+                            textContents.forEach(textContent => {
+                                textContent.items.forEach(item => {
+                                    let workerName = item.str.trim();
+                                    if (workerName) addWorkerToList(workerName, "N/A", "N/A");
+                                });
+                            });
+                        });
+                    });
+                };
+                fileReader.readAsArrayBuffer(file);
+            }
+        }
+
+        function addWorkerToList(name, cnic, contact) {
+            totalWorkers++;
+            localStorage.setItem("totalWorkers", totalWorkers);
+            updateWorkerCount();
+
+            let workerItem = createWorkerListItem(name, cnic, contact);
+            document.getElementById("workerList").appendChild(workerItem);
+        }
+
+        function goToDashboard() {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: rgb(230, 236, 240);
+            font-family: sans-serif;
+        }
+
+        .loginbox {
+            width: 350px;
+            height: 420px;
+            background: black;
+            color: white;
+            top: 50%;
+            left: 50%;
+            position: absolute;
+            transform: translate(-50%, -50%);
+            box-sizing: border-box;
+            padding: 70px 30px;
+        }
+
+        .avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 25%;
+            position: absolute;
+            top: -75px;
+            left: 29%;
+        }
+
+        h1 {
+            margin: 0;
+            padding: 0 0 20px;
+            text-align: center;
+            font-size: 22px;
+        }
+
+        .loginbox p {
+            margin: 0;
+            padding: 0;
+            font-weight: bold;
+        }
+
+        .loginbox input {
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .loginbox input[type="text"],
+        .loginbox input[type="password"] {
+            border: none;
+            border-bottom: 1px solid white;
+            background: transparent;
+            outline: none;
+            height: 40px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .loginbox input[type="submit"] {
+            border: none;
+            outline: none;
+            height: 40px;
+            background: red;
+            color: white;
+            font-size: 18px;
+            border-radius: 20px;
+        }
+
+        .loginbox input[type="submit"]:hover {
+            cursor: pointer;
+            background: #ffc107;
+            color: #000;
+        }
+
+        .loginbox a {
+            text-decoration: none;
+            font-size: 12px;
+            line-height: 20px;
+            color: darkgrey;
+        }
+
+        .loginbox a:hover {
+            color: #ffc107;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="loginbox">
+        <img src="s.png" class="avatar" alt="Avatar">
+        <h1>Login Here</h1>
+        <form id="loginForm">
+            <p>Username</p>
+            <input type="text" id="username" name="username" placeholder="Enter Username" required>
+            <p>Password</p>
+            <input type="password" id="password" name="password" placeholder="Enter Password" required>
+            <input type="submit" value="Login">
+            <br>
+            <a href="#">Forget your Password?</a><br>
+            <a href="registration.html">Don't have an account?</a>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Prevent the form from submitting
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === 'kaka' && password === 'kaka') {
+               
+                localStorage.setItem('loggedIn', 'true'); // Store login status
+                window.location.href = 'index.html'; // Redirect to index.html (dashboard)
+            } else {
+                alert('Invalid username or password');
+            }
+        });
+
+        // Redirect to the dashboard if already logged in
+        if (localStorage.getItem('loggedIn') === 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

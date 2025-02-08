@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Check if the user is logged in (sessionStorage or localStorage)
+        if (sessionStorage.getItem("loggedIn") !== "true" && localStorage.getItem("loggedIn") !== "true") {
+            // Redirect to the login page if not logged in
+            window.location.href = "login.html";
+        }
+    </script>
+</head>
+
+<body class="bg-gray-100 flex">
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="bg-blue-600 w-64 h-screen fixed sm:relative sm:block shadow-xl hidden">
+        <div class="p-6 flex justify-between items-center">
+            <a href="index.html" class="text-white text-3xl font-semibold uppercase">Admin</a>
+            <button id="close-btn" class="text-white sm:hidden text-xl">❌</button>
+        </div>
+        <nav class="text-white font-semibold pt-3">
+            <a href="total-bill.html" class="block py-4 px-6 hover:bg-blue-500">Total Bill Collected</a>
+            <a href="total-users.html" class="block py-4 px-6 hover:bg-blue-500">Total Users</a>
+            <a href="total-workers.html" class="block py-4 px-6 hover:bg-blue-500">Total Workers</a>
+            <a href="total-area.html" class="block py-4 px-6 hover:bg-blue-500">Total Area</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="w-full flex flex-col h-screen overflow-y-hidden">
+        <!-- Header Section -->
+        <header class="w-full bg-white py-4 px-6 flex justify-between">
+            <button id="menu-btn" class="text-black sm:hidden">☰</button>
+            <!-- Logout button -->
+            <button id="logout-btn" class="underline text-blue-500">Logout</button>
+        </header>
+
+        <!-- Main Dashboard Section -->
+        <main class="w-full flex-grow p-6">
+            <h1 class="text-3xl text-black pb-6">Dashboard</h1>
+            <p>Welcome to the admin dashboard. Click on the menu to navigate.</p>
+
+            <!-- Metrics Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="p-6 bg-white shadow">
+                    <p class="text-xl">Total Bill Collected</p>
+                    <p class="text-2xl font-bold">$<span id="totalBill">0</span></p>
+                </div>
+                <div class="p-6 bg-white shadow">
+                    <p class="text-xl">Total Users</p>
+                    <p class="text-2xl font-bold"><span id="totalUsers">0</span></p>
+                </div>
+                <div class="p-6 bg-white shadow">
+                    <p class="text-xl">Total Workers</p>
+                    <p class="text-2xl font-bold"><span id="totalWorkers">0</span></p>
+                </div>
+                <div class="p-6 bg-white shadow">
+                    <p class="text-xl">Total Area</p>
+                    <p class="text-2xl font-bold"><span id="totalArea">0</span> sq. km</p>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="w-full bg-white flex justify-between items-center p-4">
+            <p class="text-sm">Built by <a href="#" class="underline">kaka</a>.</p>
+            <!-- Clear All button -->
+            <button id="clear-all-btn" class="underline text-red-500">Clear All</button>
+        </footer>
+    </div>
+
+    <script>
+        // Sidebar toggle function
+        function toggleSidebar() {
+            document.getElementById("sidebar").classList.toggle("hidden");
+        }
+
+        // Close sidebar function
+        function closeSidebar() {
+            document.getElementById("sidebar").classList.add("hidden");
+        }
+
+        // Logout function
+        function logout() {
+            // Clear session and local storage
+            sessionStorage.removeItem("loggedIn");
+            localStorage.removeItem("loggedIn");
+            window.location.href = "login.html";
+        }
+
+        // Clear all data function
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear all data? This action cannot be undone.")) {
+                // Clear sessionStorage and localStorage data
+                sessionStorage.removeItem("totalBill");
+                sessionStorage.removeItem("totalUsers");
+                sessionStorage.removeItem("totalWorkers");
+                sessionStorage.removeItem("totalArea");
+                localStorage.removeItem("totalBill");
+                localStorage.removeItem("totalUsers");
+                localStorage.removeItem("totalWorkers");
+                localStorage.removeItem("totalArea");
+
+                // Reset dashboard values
+                document.getElementById("totalBill").textContent = "0";
+                document.getElementById("totalUsers").textContent = "0";
+                document.getElementById("totalWorkers").textContent = "0";
+                document.getElementById("totalArea").textContent = "0";
+
+                alert("All data has been cleared.");
+            }
+        }
+
+        // Load stored data into the dashboard
+        function loadStoredData() {
+            const totalBill = sessionStorage.getItem("totalBill") || localStorage.getItem("totalBill") || "0";
+            const totalUsers = sessionStorage.getItem("totalUsers") || localStorage.getItem("totalUsers") || "0";
+            const totalWorkers = sessionStorage.getItem("totalWorkers") || localStorage.getItem("totalWorkers") || "0";
+            const totalArea = sessionStorage.getItem("totalArea") || localStorage.getItem("totalArea") || "0";
+
+            document.getElementById("totalBill").textContent = totalBill;
+            document.getElementById("totalUsers").textContent = totalUsers;
+            document.getElementById("totalWorkers").textContent = totalWorkers;
+            document.getElementById("totalArea").textContent = totalArea;
+        }
+
+        // Event listeners for various actions
+        document.getElementById("menu-btn").addEventListener("click", toggleSidebar);
+        document.getElementById("close-btn").addEventListener("click", closeSidebar);
+        document.getElementById("logout-btn").addEventListener("click", logout);
+        document.getElementById("clear-all-btn").addEventListener("click", clearAllData);
+
+        // Initial data load
+        loadStoredData();
+    </script>
+</body>
+
+</html>

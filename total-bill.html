@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Bill Collected</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Total Bill Collected</h1>
+        <p class="text-lg">This page shows the total bill collected.</p>
+
+        <div class="mt-4">
+            <label for="billAmount" class="block text-lg font-medium">Enter Bill Amount:</label>
+            <input type="number" id="billAmount" class="mt-2 p-2 border rounded w-full" placeholder="Enter amount">
+            <button onclick="addBill()" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">Add Bill</button>
+        </div>
+
+        <ul id="billList" class="mt-4"></ul>
+
+        <p class="text-2xl mt-4">Total: $<span id="totalAmount">0</span></p>
+
+        <a href="index.html" class="mt-6 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Back to Dashboard</a>
+    </div>
+
+    <script>
+        // Load stored data from localStorage or initialize to zero
+        let total = parseFloat(localStorage.getItem("totalBill")) || 0;
+        let bills = JSON.parse(localStorage.getItem("bills")) || [];
+
+        // Update UI with total and bill list
+        document.getElementById("totalAmount").textContent = total.toFixed(2);
+        loadBillList();
+
+        function addBill() {
+            const billInput = document.getElementById("billAmount");
+            const amount = parseFloat(billInput.value);
+
+            if (!amount || amount <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+            }
+
+            total += amount;
+            bills.push(amount);
+
+            // Update localStorage with the new total and bills
+            localStorage.setItem("totalBill", total);
+            localStorage.setItem("bills", JSON.stringify(bills));
+
+            updateTotal();
+            addBillToList(amount);
+
+            billInput.value = "";
+        }
+
+        function removeBill(element, amount) {
+            total -= amount;
+            bills = bills.filter(bill => bill !== amount);
+
+            // Update localStorage with the updated total and bills
+            localStorage.setItem("totalBill", total);
+            localStorage.setItem("bills", JSON.stringify(bills));
+
+            updateTotal();
+            element.parentElement.remove();
+        }
+
+        function updateTotal() {
+            document.getElementById("totalAmount").textContent = total.toFixed(2);
+        }
+
+        function addBillToList(amount) {
+            const billList = document.getElementById("billList");
+            const listItem = document.createElement("li");
+            listItem.className = "flex justify-between bg-white p-2 my-2 border rounded";
+            listItem.innerHTML = `<span>$${amount.toFixed(2)}</span>
+                <button onclick="removeBill(this, ${amount})" class="text-red-500">Remove</button>`;
+            billList.appendChild(listItem);
+        }
+
+        function loadBillList() {
+            // Load and display the previously saved bills
+            bills.forEach(amount => addBillToList(amount));
+        }
+    </script>
+</body>
+
+</html>

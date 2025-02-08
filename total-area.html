@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+    <div class="container max-w-lg bg-white p-6 rounded-lg shadow-lg text-center">
+        <h2 class="text-2xl font-bold mb-4">Area Management</h2>
+
+        <!-- Total Area Display -->
+        <p class="mb-4">Total Area: <span id="totalArea" class="font-semibold">0</span> sq. km</p>
+
+        <!-- Area Name and Square Feet Inputs -->
+        <div class="space-y-2 mb-4">
+            <input type="text" id="areaName" placeholder="Area Name" class="w-full p-2 border rounded">
+            <input type="number" id="areaSquareFeet" placeholder="Total Square Feet" class="w-full p-2 border rounded">
+        </div>
+
+        <button onclick="addArea()" class="w-full bg-blue-500 text-white p-2 rounded mb-4">Add Area</button>
+
+        <ul id="areaList" class="text-left mb-4"></ul>
+
+        <button onclick="goToDashboard()" class="w-full bg-gray-500 text-white p-2 rounded mt-4">Back to Dashboard</button>
+    </div>
+
+    <script>
+        // Get stored total area or set default value
+        let totalArea = parseFloat(localStorage.getItem("totalArea")) || 0;
+        document.getElementById("totalArea").textContent = totalArea;
+
+        // Update total area count
+        function updateAreaCount() {
+            document.getElementById("totalArea").textContent = totalArea;
+        }
+
+        // Validate inputs
+        function isValidAreaInput(name, squareFeet) {
+            return name && !isNaN(squareFeet) && squareFeet > 0;
+        }
+
+        // Create a list item for the area
+        function createAreaListItem(name, squareFeet) {
+            let li = document.createElement("li");
+            li.classList.add("flex", "items-center", "justify-between", "py-2");
+
+            let areaDetails = document.createElement("span");
+            areaDetails.textContent = `${name} - ${squareFeet} Sq Ft`;
+            li.appendChild(areaDetails);
+
+            let removeBtn = document.createElement("button");
+            removeBtn.textContent = "Remove";
+            removeBtn.className = "ml-2 text-red-500";
+            removeBtn.onclick = () => removeArea(li, squareFeet);
+            li.appendChild(removeBtn);
+
+            return li;
+        }
+
+        // Add area to the list
+        function addArea() {
+            let name = document.getElementById("areaName").value.trim();
+            let squareFeet = parseFloat(document.getElementById("areaSquareFeet").value.trim());
+
+            if (!isValidAreaInput(name, squareFeet)) {
+                alert("Please enter valid area details (Square feet must be a positive number).");
+                return;
+            }
+
+            // Add area to the list and update total area
+            let areaItem = createAreaListItem(name, squareFeet);
+            document.getElementById("areaList").appendChild(areaItem);
+
+            // Update total area and store in localStorage
+            totalArea += squareFeet / 1000000;  // Convert square feet to square kilometers
+            localStorage.setItem("totalArea", totalArea);
+
+            updateAreaCount();
+
+            resetAreaForm();
+        }
+
+        // Remove area from the list and update total area
+        function removeArea(areaItem, squareFeet) {
+            areaItem.remove();
+
+            // Update total area when removing an area
+            totalArea -= squareFeet / 1000000; // Convert square feet to square kilometers
+            localStorage.setItem("totalArea", totalArea);
+
+            updateAreaCount();
+        }
+
+        // Reset area input fields
+        function resetAreaForm() {
+            document.getElementById("areaName").value = "";
+            document.getElementById("areaSquareFeet").value = "";
+        }
+
+        // Redirect to dashboard
+        function goToDashboard() {
+            window.location.href = "index.html";
+        }
+    </script>
+</body>
+</html>

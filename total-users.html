@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Users</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-6">Total Users</h1>
+        <p class="text-lg">This page lets you add users manually or extract users from a PDF or Excel file.</p>
+
+        <!-- Back to Dashboard -->
+        <a href="index.html" class="mt-6 inline-block bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Back to Dashboard</a>
+
+        <!-- Manual User Addition -->
+        <div class="mt-4">
+            <h2 class="text-lg font-bold">Add User Manually</h2>
+            <input type="text" id="userName" placeholder="Enter Name" class="mt-2 p-2 border rounded w-full">
+            <input type="text" id="userContact" placeholder="Enter Contact (1 to 100 digits)" class="mt-2 p-2 border rounded w-full">
+            <button onclick="addManualUser()" class="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                Add User
+            </button>
+        </div>
+
+        <!-- PDF Upload -->
+        <div class="mt-4">
+            <label for="pdfUpload" class="block text-lg font-medium">Upload PDF with Users:</label>
+            <input type="file" id="pdfUpload" accept="application/pdf" class="mt-2 p-2 border rounded w-full">
+            <button onclick="uploadPDF()" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Upload & Extract Users from PDF
+            </button>
+        </div>
+
+        <!-- Excel Upload -->
+        <div class="mt-4">
+            <label for="excelUpload" class="block text-lg font-medium">Upload Excel File with Users:</label>
+            <input type="file" id="excelUpload" accept=".xlsx, .xls" class="mt-2 p-2 border rounded w-full">
+            <button onclick="uploadExcel()" class="mt-2 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Upload & Extract Users from Excel
+            </button>
+        </div>
+
+        <!-- User List -->
+        <ul id="userList" class="mt-4"></ul>
+        <p class="text-2xl mt-4">Total Users: <span id="totalUsers">0</span></p>
+    </div>
+
+    <script>
+        // User-related data
+        let totalUsers = parseInt(localStorage.getItem("totalUsers")) || 0;
+        let userList = JSON.parse(localStorage.getItem("users")) || [];
+        document.getElementById("totalUsers").textContent = totalUsers;
+        loadUserList();
+
+        // Add User
+        function addUser(name, contact) {
+            if (!name || !contact) return;
+
+            totalUsers++;
+            userList.push({ name, contact });
+            localStorage.setItem("totalUsers", totalUsers);
+            localStorage.setItem("users", JSON.stringify(userList));
+
+            document.getElementById("totalUsers").textContent = totalUsers;
+
+            const userListElement = document.getElementById("userList");
+            const listItem = document.createElement("li");
+            listItem.className = "flex justify-between bg-white p-2 my-2 border rounded";
+            listItem.innerHTML = `<span>${name} - ${contact}</span>
+                <button onclick="removeUser(this)" class="text-red-500">Remove</button>`;
+            userListElement.appendChild(listItem);
+        }
+
+        // Remove User
+        function removeUser(element) {
+            totalUsers--;
+            document.getElementById("totalUsers").textContent = totalUsers;
+            element.parentElement.remove();
+
+            const nameContact = element.parentElement.querySelector("span").textContent.split(" - ");
+            userList = userList.filter(user => user.name !== nameContact[0] && user.contact !== nameContact[1]);
+
+            localStorage.setItem("totalUsers", totalUsers);
+            localStorage.setItem("users", JSON.stringify(userList));
+        }
+
+        // Load User List from localStorage
+        function loadUserList() {
+            userList.forEach(user => addUser(user.name, user.contact));
+        }
+
+        // Manual User Addition
+        function addManualUser() {
+            const name = document.getElementById("userName").value.trim();
+            const contact = document.getElementById("userContact").value.trim();
+
+            // Validate contact number to ensure it is between 1 and 100 digits
+            const isValidContact = /^\d{1,100}$/.test(contact);
+
+            if (name === "" || !isValidContact) {
+                alert("Enter a valid name and a contact number between 1 and 100 digits.");
+                return;
+            }
+
+            addUser(name, contact);
+            document.getElementById("userName").value = "";
+            document.getElementById("userContact").value = "";
+        }
+
+        // PDF Upload and Extraction
+        function uploadPDF() {
+            const pdfInput = document.getElementById("pdfUpload");
+            if (pdfInput.files.length === 0) {
+                alert("Please select a PDF file.");
+                return;
+            }
+
+            const file = pdfInput.files[0];
+            const fileURL = URL.createObjectURL(file);
+
+            displayPDF(fileURL);
+            extractUsersFromPDF(file);
+        }
+
+        function displayPDF(pdfURL) {
+            pdfjsLib.getDocument(pdfURL).promise.then(pdf => {
+                pdf.getPage(1).then(page => {
+                    const scale = 1.5;
+                    const viewport = page.getViewport({ scale });
+                    const canvas = document.getElementById("pdfViewer");
+                    const context = canvas.getContext("2d");
+
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: viewport
+                    };
+                    page.render(renderContext);
+                });
+            });
+        }
+
+        async function extractUsersFromPDF(file) {
+            const reader = new FileReader();
+            reader.onload = async function() {
+                const typedarray = new Uint8Array(this.result);
+                const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                let allText = "";
+
+                for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(" ");
+                    allText += pageText + "\n";
+                }
+
+                parseUserData(allText);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseUserData(text) {
+            const lines = text.split("\n");
+            let extractedUsers = [];
+
+            lines.forEach(line => {
+                const parts = line.match(/(.+?)\s+(\d{1,100})/);
+                if (parts) {
+                    extractedUsers.push({ name: parts[1].trim(), contact: parts[2] });
+                }
+            });
+
+            extractedUsers.forEach(user => addUser(user.name, user.contact));
+        }
+
+        // Excel Upload and Extraction
+        function uploadExcel() {
+            const excelInput = document.getElementById("excelUpload");
+            if (excelInput.files.length === 0) {
+                alert("Please select an Excel file.");
+                return;
+            }
+
+            const file = excelInput.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: "binary" });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+
+                json.forEach(row => {
+                    if (row.Name && row.Contact) {
+                        addUser(row.Name, row.Contact);
+                    }
+                });
+            };
+            reader.readAsBinaryString(file);
+        }
+    </script>
+</body>
+</html>
+
